@@ -2,7 +2,7 @@
 
 
 ## What it is
-A data validation framework, to be used with data models. You just include Vandrake into your class, and it gives you
+A data validation framework to be used with data models. You just include Vandrake into your class, and it gives you
 methods to construct a validation chain for the model attributes.
 
 
