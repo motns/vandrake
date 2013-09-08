@@ -1,0 +1,6 @@
+coverage
+doc
+bin
+vendor
+.yardoc
+.bundle
