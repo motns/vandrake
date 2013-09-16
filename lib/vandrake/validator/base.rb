@@ -51,6 +51,14 @@ module Vandrake
       end
 
 
+      # Whether this Validator operates on the non-type-cast (raw) attribute.
+      # Defaults to False.
+      # @return [Boolean]
+      def self.raw?
+        @is_raw ||= false
+      end
+
+
       # Returns the error codes and messages for this Validator in the following format:
       #
       #   {

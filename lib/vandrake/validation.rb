@@ -58,7 +58,11 @@ module Vandrake
     # @return [Boolean] True on success, False on failure
     #
     def run(document)
-      values = @attributes.collect {|a| document.read_attribute(a) }
+      values = @attributes.collect do |a|
+        if @validator_class.raw? then document.read_attribute_before_type_cast(a)
+        else document.read_attribute(a)
+        end
+      end
 
       if @validator_class.validate(*values, @params)
         true

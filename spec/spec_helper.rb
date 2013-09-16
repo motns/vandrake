@@ -25,8 +25,15 @@ class TestBaseModel
   def read_attribute(key)
     @attributes[key]
   end
+end
 
-  def self.model_name
-    ActiveModel::Name.new(self, nil, "temp")
+class TestBaseWithRawModel < TestBaseModel
+  def initialize(attributes, raw_attributes)
+    super(attributes)
+    @raw_attributes = raw_attributes
+  end
+
+  def read_attribute_before_type_cast(key)
+    @raw_attributes[key]
   end
 end
