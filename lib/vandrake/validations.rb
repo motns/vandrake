@@ -4,7 +4,7 @@ module Vandrake
   module Validations
     extend ActiveSupport::Concern
 
-    # @TODO - Support for these in Mandrake?
+    # @TODO - Support for these in Model class?
     # included do |base|
     #   base.define_model_callbacks :validation, only: [:before, :after]
     #   base.after_attribute_change { |doc| doc.reset_validated }
@@ -29,7 +29,7 @@ module Vandrake
     protected :validated?, :reset_validated
 
 
-    # Returns the {Vandrake::FailedValidators} instance for the current {Vandrake::Model} instance
+    # Returns the {Vandrake::FailedValidators} instance for the current Model instance
     #
     # @return [Vandrake::FailedValidators]
     def failed_validators
@@ -37,7 +37,7 @@ module Vandrake
     end
 
 
-    # Shortcut for getting the main {Vandrake::ValidationChain} for the current {Vandrake::Model} class
+    # Shortcut for getting the main {Vandrake::ValidationChain} for the current Model class
     #
     # @return [Vandrake::ValidationChain]
     def validation_chain
@@ -45,7 +45,7 @@ module Vandrake
     end
 
 
-    # Runs validations and returns a Boolean indicating whether the current {Vandrake::Model}
+    # Runs validations and returns a Boolean indicating whether the current Model
     # instance data is valid
     #
     # @return [TrueClass, FalseClass]
@@ -55,7 +55,7 @@ module Vandrake
     end
 
 
-    # Run the main validation chain for this {Vandrake::Model} instance
+    # Run the main validation chain for this Model instance
     #
     # @return [TrueClass, FalseClass]
     def run_validations
@@ -144,7 +144,7 @@ module Vandrake
       #
       # @param [Vandrake::Key] key
       # @return [void]
-      def create_validations_for(key)
+      def create_validations_for(key) # @MOTNS - Again, this shouldn't really be here...
         key_name = key.name
         key_params = key.params
 
