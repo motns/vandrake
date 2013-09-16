@@ -169,5 +169,46 @@ describe Vandrake::Validation do
         end
       end
     end
+
+
+    context "with a raw validator" do
+      before(:all) do
+        @validation = described_class.new(:BooleanCoercible, :is_batman)
+      end
+
+      context "and a document with a valid raw attribute" do
+        before(:all) do
+          @doc = TestBaseWithRawModel.new({:title => "Bruce Wayne", :is_batman => true}, {:title => "Bruce Wayne", :is_batman => 1})
+        end
+
+        it "returns true" do
+          @validation.run(@doc).should be_true
+        end
+
+        it "adds no failed validators" do
+          @doc.failed_validators.list.should be_empty
+        end
+      end
+
+      context "and a document with an invalid raw attribute" do
+        before(:all) do
+          @doc = TestBaseWithRawModel.new({:title => "The incredible Spider Man", :is_batman => nil}, {:title => "The incredible Spider Man", :is_batman => 'nope'})
+        end
+
+        it "returns false" do
+          @validation.run(@doc).should be_false
+        end
+
+        it "adds the failed validator for attribute" do
+          @doc.failed_validators.list.should include(:attribute)
+          @doc.failed_validators.list[:attribute].should include(:is_batman)
+          @doc.failed_validators.list[:attribute][:is_batman].should include({
+            :validator => :BooleanCoercible,
+            :error_code => :not_boolean,
+            :message => "must be one of: true, false, 1, 0"
+          })
+        end
+      end
+    end
   end
 end
