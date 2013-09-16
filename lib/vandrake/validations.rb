@@ -62,14 +62,6 @@ module Vandrake
       run_callbacks :validation do
         failed_validators.clear
         validation_chain.run(self)
-
-        @embedded_models.each do |name, embedded_model|
-          unless embedded_model.model.valid?
-            failed_validators.include_embedded_model(name, embedded_model.model.failed_validators)
-            break
-          end
-        end
-
         @validated = true
       end
     end
