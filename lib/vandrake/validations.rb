@@ -76,6 +76,37 @@ module Vandrake
     protected :run_validations
 
 
+    unless method_defined? :read_attribute
+      # @TODO - Emit warning here about not relying on the default implementation
+
+      # Method for reading out the value of the given Model attribute for validation.
+      # This should be overridden in the class we're included in.
+      #
+      # @param [Symbol, String] a The name of the attribute
+      # @return [Object] The value of the attribute
+      def read_attribute(a)
+        send a.to_sym
+      end
+    end
+
+
+    unless method_defined? :read_attribute_before_type_cast
+      # Method for reading out the original (raw) value of the given Model
+      # attribute for validation. Not all Model classes will support this,
+      # so we default to using the standard {#read_attribute} method.
+      #
+      # This should be overridden in the class we're included in, but only if
+      # they want to use "raw" validators.
+      #
+      # @param [Symbol, String] a The name of the attribute
+      # @return [Object] The value of the attribute
+      def read_attribute_before_type_cast(a)
+        # @TODO - Emit warning here only if a Raw validator is used
+        read_attribute(a)
+      end
+    end
+
+
     # Methods to extend the class we're included in
     module ClassMethods
       # Returns the {Vandrake::ValidationChain} for the current {Vandrake::Model} class
