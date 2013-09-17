@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Vandrake::Validator::BooleanCoercible do
+describe Vandrake::Validator::CoercibleToBoolean do
   context "::validate" do
     subject(:validator) { described_class }
 

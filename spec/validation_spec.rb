@@ -173,7 +173,7 @@ describe Vandrake::Validation do
 
     context "with a raw validator" do
       before(:all) do
-        @validation = described_class.new(:BooleanCoercible, :is_batman)
+        @validation = described_class.new(:CoercibleToBoolean, :is_batman)
       end
 
       context "and a document with a valid raw attribute" do
@@ -203,7 +203,7 @@ describe Vandrake::Validation do
           @doc.failed_validators.list.should include(:attribute)
           @doc.failed_validators.list[:attribute].should include(:is_batman)
           @doc.failed_validators.list[:attribute][:is_batman].should include({
-            :validator => :BooleanCoercible,
+            :validator => :CoercibleToBoolean,
             :error_code => :not_boolean,
             :message => "must be one of: true, false, 1, 0"
           })

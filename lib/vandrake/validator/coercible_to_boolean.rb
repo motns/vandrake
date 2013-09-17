@@ -1,29 +1,28 @@
 module Vandrake
   module Validator
-    # Used to validate whether a given value can be reliable coerced into an Integer
-    class IntegerCoercible < Base
+    # Used to validate whether a given value can be reliable coerced into Boolean
+    class CoercibleToBoolean < Base
 
       @error_codes = {
-        :not_integer => "must be an integer"
+        :not_boolean => "must be one of: true, false, 1, 0"
       }
 
       @is_raw = true
 
       protected
         # Run validation. Returns True if the given value can be safely converted
-        # to an Integer type.
+        # to a boolean type.
         #
         # @param value
         # @return [TrueClass, FalseClass] Validation success
         def self.run_validator(value, params={})
           return true if value.nil?
 
-          begin
-            Integer(value)
-            return true
-          rescue ArgumentError
-            set_error :not_integer
-            return false
+          if value.respond_to?(:to_s) && ["true", "false", "0", "1"].include?(value.to_s.downcase)
+            true
+          else
+            set_error :not_boolean
+            false
           end
         end
       # end Protected

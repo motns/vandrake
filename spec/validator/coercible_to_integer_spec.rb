@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Vandrake::Validator::IntegerCoercible do
+describe Vandrake::Validator::CoercibleToInteger do
   context "::validate" do
     subject(:validator) { described_class }
 
