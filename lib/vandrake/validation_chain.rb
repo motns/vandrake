@@ -232,7 +232,7 @@ module Vandrake
         return true if @conditions.empty?
 
         @conditions.each do |condition|
-          return false unless condition[:validator].validate(document.read_attribute(condition[:attribute]))
+          return false unless condition[:validator].new.validate(document.read_attribute(condition[:attribute]))
         end
 
         true

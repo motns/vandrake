@@ -2,23 +2,29 @@ require 'spec_helper'
 
 describe Vandrake::Validator::Inclusion do
   context "::validate" do
-    subject(:validator) { described_class }
-
     context "with parameter {:in => 0..10}" do
+      let(:validator) { described_class.new(in: 0..10) }
+
       context "when called with nil" do
-        it { validator.validate(nil, in: 0..10).should be_true }
+        it { validator.validate(nil).should be_true }
+
+        subject { validator.validate(nil); validator }
         its(:last_error_code) { should be_nil }
         its(:last_error) { should be_nil }
       end
 
       context "when called with 5" do
-        it { validator.validate(5, in: 0..10).should be_true }
+        it { validator.validate(5).should be_true }
+
+        subject { validator.validate(5); validator }
         its(:last_error_code) { should be_nil }
         its(:last_error) { should be_nil }
       end
 
       context "when called with 15" do
-        it { validator.validate(15, in: 0..10).should be_false }
+        it { validator.validate(15).should be_false }
+
+        subject { validator.validate(15); validator }
         its(:last_error_code) { should eq(:not_in_range) }
         its(:last_error) { should eq("must be between 0 and 10") }
       end
@@ -26,20 +32,28 @@ describe Vandrake::Validator::Inclusion do
 
 
     context 'with parameter {:in => ["one", "two", "three"]}' do
+      let(:validator) { described_class.new(in: %w(one two three)) }
+
       context 'when called with nil' do
-        it { validator.validate(nil, in: %w(one two three)).should be_true }
+        it { validator.validate(nil).should be_true }
+
+        subject { validator.validate(nil); validator }
         its(:last_error_code) { should be_nil }
         its(:last_error) { should be_nil }
       end
 
       context 'when called with "two"' do
-        it { validator.validate("two", in: %w(one two three)).should be_true }
+        it { validator.validate("two").should be_true }
+
+        subject { validator.validate("two"); validator }
         its(:last_error_code) { should be_nil }
         its(:last_error) { should be_nil }
       end
 
       context 'when called with "four"' do
-        it { validator.validate("four", in: %w(one two three)).should be_false }
+        it { validator.validate("four").should be_false }
+
+        subject { validator.validate("four"); validator }
         its(:last_error_code) { should eq(:not_in_set) }
         its(:last_error) { should eq("must be one of: one, two, three") }
       end
@@ -47,20 +61,28 @@ describe Vandrake::Validator::Inclusion do
 
 
     context 'with parameter {:in => 1.week.ago.to_date..Date.today}' do
+      let(:validator) { described_class.new(in: 1.week.ago.to_date..Date.today) }
+
       context 'when called with nil' do
-        it { validator.validate(nil, in: 1.week.ago.to_date..Date.today).should be_true }
+        it { validator.validate(nil).should be_true }
+
+        subject { validator.validate(nil); validator }
         its(:last_error_code) { should be_nil }
         its(:last_error) { should be_nil }
       end
 
       context 'when called with 2.weeks.ago.to_date' do
-        it { validator.validate(2.days.ago.to_date, in: 1.week.ago.to_date..Date.today).should be_true }
+        it { validator.validate(2.days.ago.to_date).should be_true }
+
+        subject { validator.validate(2.days.ago.to_date); validator }
         its(:last_error_code) { should be_nil }
         its(:last_error) { should be_nil }
       end
 
       context 'when called with 2.days.ago.to_date' do
-        it { validator.validate(2.weeks.ago.to_date, in: 1.week.ago.to_date..Date.today).should be_false }
+        it { validator.validate(2.weeks.ago.to_date).should be_false }
+
+        subject { validator.validate(2.weeks.ago.to_date); validator }
         its(:last_error_code) { should eq(:not_in_range) }
         its(:last_error) { should eq("must be between #{1.week.ago.to_date} and #{Date.today}") }
       end
@@ -70,7 +92,7 @@ describe Vandrake::Validator::Inclusion do
     context "called without the :in parameter" do
       it do
         expect {
-          validator.validate("")
+          described_class.new
         }.to raise_error('Missing :in parameter for Inclusion validator')
       end
     end
@@ -79,7 +101,7 @@ describe Vandrake::Validator::Inclusion do
     context "called with a non-Enumerable :in parameter" do
       it "throws an exception" do
         expect {
-          validator.validate("", in: 12)
+          described_class.new(in: 12)
         }.to raise_error('The :in parameter must be provided as an Enumerable, Fixnum given')
       end
     end

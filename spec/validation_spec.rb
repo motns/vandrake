@@ -4,16 +4,14 @@ describe Vandrake::Validation do
   context "::initialize" do
     context "called with :Presence, :title" do
       subject { described_class.new(:Presence, :title) }
-      its(:validator_name) { should eq(:Presence) }
-      its(:validator_class) { should eq(Vandrake::Validator::Presence) }
+      its(:validator) { should be_an_instance_of(::Vandrake::Validator::Presence) }
       its(:attributes) { should include(:title) }
     end
 
 
     context "called with :ValueMatch, :password, :password_confirm" do
       subject { described_class.new(:ValueMatch, :password, :password_confirm) }
-      its(:validator_name) { should eq(:ValueMatch) }
-      its(:validator_class) { should eq(Vandrake::Validator::ValueMatch) }
+      its(:validator) { should be_an_instance_of(::Vandrake::Validator::ValueMatch) }
       its(:attributes) { should include(:password) }
       its(:attributes) { should include(:password_confirm) }
     end

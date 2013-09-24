@@ -15,7 +15,7 @@ module Vandrake
         #
         # @param value
         # @return [TrueClass, FalseClass] Validation success
-        def self.run_validator(value, params={})
+        def run_validator(value)
           return true if value.nil?
 
           if value.respond_to?(:to_s) && ["true", "false", "0", "1"].include?(value.to_s.downcase)

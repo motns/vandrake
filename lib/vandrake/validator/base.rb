@@ -1,14 +1,15 @@
 module Vandrake
-  # Validators are used to statically validate a single value, and provide additional
-  # feedback in the form of error messages and codes upon failure. They are only
-  # ever used as static classes.
+  # Validator instances are used to validate a single value (or set of values),
+  # and provide additional feedback in the form of error messages and codes upon
+  # failure. Certain validators (like Length) also require additional parameters
+  # to configure their behaviour upon initialization (like setting the required :length constraint).
   #
   # Each validator has a pre-defined number of inputs. "Simple" validators (like {Vandrake::Validator::Length})
   # take a single value, whereas "complex" validators (like {Vandrake::Validator::ValueMatch}) take
   # two or more.
   #
   # When a Validator fails, it sets *last_error* and *last_error_code*
-  # on the Validator class to reflect the exact nature of the failure. This value
+  # on the Validator instance to reflect the exact nature of the failure. This value
   # is reset every time the Validator is run, and only stores the details for the most
   # recent failure.
   module Validator
@@ -39,24 +40,17 @@ module Vandrake
     # emitted by the Validator classes.
     class Base
 
-      # Used to define all the possible error codes, and respectice messages for
-      # a given Validator
-      @error_codes = {}
+      attr :params, :last_error, :last_error_code
 
-
-      # The number of arguments this Validator takes. Defaults to 1.
+      # Get the number of arguments this Validator takes. Defaults to 1
       # @return [Fixnum]
-      def self.inputs
-        @inputs ||= 1
-      end
+      def self.inputs; @inputs ||= 1 end
 
 
-      # Whether this Validator operates on the non-type-cast (raw) attribute.
+      # Whether this Validator operates on the non-type-cast (raw) attribute. Defaults to False.
       # Defaults to False.
       # @return [Boolean]
-      def self.raw?
-        @is_raw ||= false
-      end
+      def self.raw?; @is_raw ||= false end
 
 
       # Returns the error codes and messages for this Validator in the following format:
@@ -67,56 +61,34 @@ module Vandrake
       #   }
       #
       # @return [Hash]
-      def self.error_codes
-        @error_codes
+      def self.error_codes; @error_codes ||= {} end
+
+
+      # Used to add Type classes to the central registry
+      #
+      # @param [Class] descendant
+      def self.inherited(descendant)
+        id = descendant.name.to_s.gsub(/^.*::/, '').to_sym
+        ::Vandrake::Validator.type_registry[id] = descendant
+
+        # Make shortname available as class attribute
+        descendant.instance_eval "def validator_name; :#{id} end"
       end
 
 
-      # Returns the error message for the last validation with this Validator
-      #
-      # @return [String, NilClass] Error message if there was a failure, nil otherwise
-      def self.last_error
-        @last_error ||= nil
-      end
-
-
-      # Returns the error code for the last validation with this Validator
-      #
-      # @return [Symbol, NilClass] Error code if there was a failure, nil otherwise
-      def self.last_error_code
-        @last_error_code ||= nil
+      def initialize(params = {})
+        @last_error = nil
+        @last_error_code = nil
+        validate_params(params)
+        @params = params
       end
 
 
       # Resets the last error message and code for this Validator
       # @return [void]
-      def self.reset_last_error
+      def reset_last_error
         @last_error = nil
         @last_error_code = nil
-      end
-
-
-      # Used by the Validator to set the error code and message on validation failure.
-      # The message is filled in automatically by matching the code to {error_codes}.
-      #
-      # Some error messages have placeholders for parameters - for example, the
-      # error for the Length validator will contain the actual length we're validating.
-      # This will be filled in by passing the length in as a parameter here, and
-      # having the method insert it into the message via sprintf().
-      #
-      # @param [Symbol] code The error code
-      # @param params A set of optional parameters for the error message
-      #
-      # @return [void]
-      def self.set_error(code, *params)
-        code = code.to_sym
-        raise "Unknown error code #{code} for validator #{self.name}" unless @error_codes.key? code
-
-        message = @error_codes[code]
-        message = sprintf(message, *params) unless params.empty?
-
-        @last_error = message
-        @last_error_code = code
       end
 
 
@@ -126,37 +98,59 @@ module Vandrake
       #
       # @raise [ArgumentError] If the wrong number of values are passed in
       #
-      # @overload validate(value, params = {})
-      #   Run simple validator with only one input, and optional parameters
+      # @overload validate(value)
+      #   Run simple validator with only one input
       #   @param value The value to validate
-      #   @param [Hash] params Optional parameters to pass to the validator
       #   @return [TrueClass, FalseClass] True on success, False on failure
       #
-      # @overload validate(value1, value2, params = {})
-      #   Run complex validator with multiple inputs, and optional parameters
+      # @overload validate(value1, value2)
+      #   Run complex validator with multiple inputs
       #   @param value1 The value to validate
       #   @param value2 The value to validate
-      #   @param [Hash] params Optional parameters to pass to the validator
       #   @return [TrueClass, FalseClass] True on success, False on failure
       #
-      def self.validate(*args)
+      def validate(*values)
         reset_last_error
+        required_inputs = self.class.inputs
 
-        values, params = Vandrake::extract_params(*args)
+        raise ArgumentError, "This validator takes #{required_inputs} value(s) for validation, #{values.size} given" unless values.size == required_inputs
 
-        raise ArgumentError, "This validator takes #{inputs} value(s) for validation, #{args.size} given" unless values.size == inputs
-
-        run_validator(*values, params)
+        run_validator(*values)
       end
 
 
-      # Used to add Type classes to the central registry
-      #
-      # @param [Class] descendant
-      def self.inherited(descendant)
-        id = descendant.name.to_s.gsub(/^.*::/, '').to_sym
-        ::Vandrake::Validator.type_registry[id] = descendant
-      end
+      protected
+        # Used by the Validator to set the error code and message on validation failure.
+        # The message is filled in automatically by matching the code to {error_codes}.
+        #
+        # Some error messages have placeholders for parameters - for example, the
+        # error for the Length validator will contain the actual length we're validating.
+        # This will be filled in by passing the length in as a parameter here, and
+        # having the method insert it into the message via sprintf().
+        #
+        # @param [Symbol] code The error code
+        # @param params A set of optional parameters for the error message
+        #
+        # @return [void]
+        def set_error(code, *params)
+          code = code.to_sym
+          raise "Unknown error code #{code} for validator #{self.class.name}" unless self.class.error_codes.key? code
+
+          message = self.class.error_codes[code]
+          message = sprintf(message, *params) unless params.empty?
+
+          @last_error = message
+          @last_error_code = code
+        end
+
+        # Check the validator parameters (if there are any).
+        #
+        # @param [Hash] params
+        # @return [void]
+        def validate_params(params)
+          # This will be implemented by Validators which take parameters
+        end
+      # end protected
     end
   end
 end

@@ -1,10 +1,7 @@
 module Vandrake
   # Used to run a validation on one or more attributes of a {Vandrake::Model} instance,
-  # using a specific {Vandrake::Validator} class.
+  # using a specific {Vandrake::Validator} instance.
   # Validations normally form part of a {Vandrake::ValidationChain}, but can also be used on their own.
-  #
-  # @!attribute [r] validator_name
-  #   @return [Symbol] The name of the validator class
   #
   # @!attribute [r] validator_class
   #   @return [Vandrake::Validator] A reference to the Validator class to validate with
@@ -12,12 +9,9 @@ module Vandrake
   # @!attribute [r] attributes
   #   @return [Array] A list of model attributes that will be used as the input for the Validator
   #
-  # @!attribute [r] params
-  #   @return [Hash] An optional set of parameters to pass to the Validator
-  #
   class Validation
 
-    attr :validator_name, :validator_class, :attributes, :params
+    attr :validator, :attributes
 
 
     # @overload initialize(validator, *attributes, params = {})
@@ -32,13 +26,12 @@ module Vandrake
     #
     def initialize(validator, *args)
       raise ArgumentError, "Validator name should be provided as a Symbol, #{validator.class.name} given" unless validator.respond_to?(:to_sym)
+      @attributes, params = Vandrake::extract_params(*args)
 
-      @validator_class = Vandrake::Validator.get_class(validator)
-      raise ArgumentError, "Unknown validator: #{validator}" if @validator_class.nil?
+      validator_class = Vandrake::Validator.get_class(validator)
+      raise ArgumentError, "Unknown validator: #{validator}" if validator_class.nil?
 
-      @validator_name = validator.to_sym
-
-      @attributes, @params = Vandrake::extract_params(*args)
+      @validator = validator_class.new(params)
 
       @attributes.map! do |attribute|
         raise ArgumentError, "Attribute name has to be a Symbol, #{attribute.class.name} given" unless attribute.respond_to?(:to_sym)
@@ -59,19 +52,19 @@ module Vandrake
     #
     def run(document)
       values = @attributes.collect do |a|
-        if @validator_class.raw? then document.read_attribute_before_type_cast(a)
+        if @validator.class.raw? then document.read_attribute_before_type_cast(a)
         else document.read_attribute(a)
         end
       end
 
-      if @validator_class.validate(*values, @params)
+      if @validator.validate(*values)
         true
       else
         document.failed_validators.add(
           @attributes,
-          @validator_name,
-          @validator_class.last_error,
-          @validator_class.last_error_code
+          @validator.class.validator_name,
+          @validator.last_error,
+          @validator.last_error_code
         )
         false
       end

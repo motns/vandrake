@@ -21,38 +21,42 @@ module Vandrake
       }
 
       protected
-        # Run validation. Returns True if the given value matches the Regexp, False
-        # otherwise.
-        #
-        # @param value
         # @param [Hash] params
         # @option params [Regexp, Symbol] :format A regular expression, or the name of a pre-defined format
         #
         # @raise [ArgumentError] If the :format parameter is not defined
         # @raise [ArgumentError] If the :format parameter is not a Regexp or Symbol
         # @raise [ArgumentError] If the :format parameter refers to an unknown format
-        #
-        # @return [TrueClass, FalseClass] Validation success
-        def self.run_validator(value, params={})
-          return true if value.nil?
-
+        def validate_params(params)
           raise ArgumentError, "Missing :format parameter for Format validator" unless params.key? :format
 
-          format = params[:format]
-
-          unless format.is_a?(::Regexp) || format.respond_to?(:to_sym)
+          unless params[:format].is_a?(::Regexp) || params[:format].respond_to?(:to_sym)
             raise ArgumentError, "The :format parameter has to be either a Symbol or a Regexp, #{params[:format].class.name} given"
           end
 
+          if params[:format].respond_to?(:to_sym)
+            raise ArgumentError, %Q(Unknown format "#{params[:format]}" in Format validator) unless FORMATS.key? params[:format].to_sym
+          end
+        end
+
+
+        # Run validation. Returns True if the given value matches the Regexp, False
+        # otherwise.
+        #
+        # @param value
+        # @return [TrueClass, FalseClass] Validation success
+        def run_validator(value, params={})
+          return true if value.nil?
+
+          format = @params[:format]
+
           if format.respond_to?(:to_sym)
-            raise ArgumentError, %Q(Unknown format "#{format}" in Format validator) unless FORMATS.key? format.to_sym
             regex = FORMATS[format]
             code = "not_#{format}".to_sym
           else
             regex = format
             code = :wrong_format
           end
-
 
           if regex =~ value
             true
