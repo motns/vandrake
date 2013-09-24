@@ -8,7 +8,6 @@ group :development do
   gem 'simplecov', '~> 0.7.1'
   gem 'timecop',  '~> 0.6.3'
   gem 'yard', '~> 0.8.7'
-  gem 'redcarpet', '~> 3.0.0'
   gem 'coveralls', '~> 0.6.7'
 end
 
